@@ -118,28 +118,51 @@ const Exchange = ({ pools }) => {
 		setfromToken(value);
 	};
 
-	const onTokenTokenChange = (value) => {
+	const onToTokenChange = (value) => {
 		settoToken(value);
 	};
 
-	useEffect(() => {}, [failureMessage, successMessage]);
+	useEffect(() => {
+		if (failureMessage || successMessage) {
+			setTimeout(() => {
+				setresetState(true);
+				setfromValue("0");
+				settoToken("");
+			}, 5000);
+		}
+	}, [failureMessage, successMessage]);
 
 	return (
 		<div className="flex flex-col w-full items-center">
 			<div className="mb-8">
-				<AmountIn />
-				<Balance />
+				<AmountIn
+					value={fromValue}
+					onChange={onFromValueChange}
+					currencyValue={fromToken}
+					onSelect={onFromTokenChange}
+					currencies={availableTokens}
+					isSwapping={isSwapping && hasEnoughBalance}
+				/>
+				<Balance tokenBalance={fromTokenBalance} />
 			</div>
 			<div className="mb-8 w-[100%">
-				<AmountOut />
-				<Balance />
+				<AmountOut
+					fromToken={fromToken}
+					toToken={toToken}
+					amountIn={fromValueBigNumber}
+					pairContract={pairAddress}
+					currencyValue={toToken}
+					onSelect={onToTokenChange}
+					currencies={counterpartTokens}
+				/>
+				<Balance tokenBalance={toTokenBalance} />
 			</div>
-			{"approvedNeeded" && !isSwapping ? (
+			{approvedNeeded && !isSwapping ? (
 				<button
-					disabled={!"canApprove"}
-					onClick={() => {}}
+					disabled={!canApprove}
+					onClick={onApproveRequested}
 					className={`${
-						"canApprove"
+						canApprove
 							? "bg-site-pink text-white"
 							: "bg-site-dim2 text-site-dim2"
 					} ${styles.actionButton}`}>
@@ -147,10 +170,10 @@ const Exchange = ({ pools }) => {
 				</button>
 			) : (
 				<button
-					disabled={!"canSwap"}
-					onClick={() => {}}
+					disabled={!canSwap}
+					onClick={onSwapRequested}
 					className={`${
-						"canSwap"
+						canSwap
 							? "bg-site-pink text-white"
 							: "bg-site-dim2 text-site-dim2"
 					} ${styles.actionButton}`}>
@@ -162,10 +185,10 @@ const Exchange = ({ pools }) => {
 				</button>
 			)}
 
-			{"failureMessage" && !"resetState" ? (
-				<p className={styles.message}>{"failureMessage"}</p>
-			) : "successMessage" ? (
-				<p className={styles.message}>{"successMessage"}</p>
+			{failureMessage && !resetState ? (
+				<p className={styles.message}>{failureMessage}</p>
+			) : successMessage ? (
+				<p className={styles.message}>{successMessage}</p>
 			) : (
 				""
 			)}
